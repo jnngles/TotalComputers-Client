@@ -39,12 +39,19 @@ public class PacketHandler extends ChannelDuplexHandler {
         System.out.println("Connected to player "+connectSuccess_s2c.name);
     }
 
+    private void handlePingS2C(ClientboundPingPacket c2s_ping) {
+        ServerboundPongPacket s2c_pong = new ServerboundPongPacket();
+        s2c_pong.payload = c2s_ping.payload;
+        ctx.writeAndFlush(s2c_pong);
+    }
+
     @Override
     public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
         this.ctx = ctx;
         if(msg instanceof ClientboundHandshakePacket packet) handleHandshakeS2C(packet);
         else if(msg instanceof ClientboundDisconnectPacket packet) handleDisconnectS2C(packet);
         else if(msg instanceof ClientboundConnectionSuccessPacket packet) handleConnectionSuccessS2C(packet);
+        else if(msg instanceof ClientboundPingPacket packet) handlePingS2C(packet);
         super.channelRead(ctx, msg);
     }
 
