@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.netty:netty-all:4.1.77.Final"
+    implementation 'org.jetbrains:annotations:23.0.0'
+}
+
+test {
+    useJUnitPlatform()
+}
