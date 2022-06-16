@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PacketHandler extends ChannelDuplexHandler {
 
+    private static int freeId = 0;
+
     private ChannelHandlerContext ctx;
     private final Client client;
 
@@ -39,10 +41,23 @@ public class PacketHandler extends ChannelDuplexHandler {
         System.out.println("Connected to player "+connectSuccess_s2c.name);
     }
 
-    private void handlePingS2C(ClientboundPingPacket c2s_ping) {
-        ServerboundPongPacket s2c_pong = new ServerboundPongPacket();
-        s2c_pong.payload = c2s_ping.payload;
-        ctx.writeAndFlush(s2c_pong);
+    private void handlePingS2C(ClientboundPingPacket s2c_ping) {
+        ServerboundPongPacket c2s_pong = new ServerboundPongPacket();
+        c2s_pong.payload = s2c_ping.payload;
+        ctx.writeAndFlush(c2s_pong);
+    }
+
+    private void handleCreationRequestS2C(ClientboundCreationRequestPacket s2c_request) {
+        // TODO: Implement this
+        ServerboundCreationStatusPacket c2s_status = new ServerboundCreationStatusPacket();
+        c2s_status.status = ServerboundCreationStatusPacket.STATUS_OK;
+        if(freeId > Short.MAX_VALUE) c2s_status.status = ServerboundCreationStatusPacket.STATUS_ERR;
+        else c2s_status.id = (short)(freeId++);
+        ctx.writeAndFlush(c2s_status);
+    }
+
+    private void handleDestroyS2C(ClientboundDestroyPacket s2c_destroy) {
+        // TODO: Implement this
     }
 
     @Override
@@ -52,7 +67,11 @@ public class PacketHandler extends ChannelDuplexHandler {
         else if(msg instanceof ClientboundDisconnectPacket packet) handleDisconnectS2C(packet);
         else if(msg instanceof ClientboundConnectionSuccessPacket packet) handleConnectionSuccessS2C(packet);
         else if(msg instanceof ClientboundPingPacket packet) handlePingS2C(packet);
+        else if(msg instanceof ClientboundCreationRequestPacket packet) handleCreationRequestS2C(packet);
+        else if(msg instanceof ClientboundDestroyPacket packet) handleDestroyS2C(packet);
         super.channelRead(ctx, msg);
     }
+
+
 
 }
