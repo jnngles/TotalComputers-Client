@@ -7,9 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -22,6 +22,8 @@ public class PacketHandler extends ChannelDuplexHandler {
     private static final Map<Short, Object> systems = new HashMap<>();
     private static final Map<String, Short> name2id = new HashMap<>();
     private static final Map<Short, Timer> renderTimers = new HashMap<>();
+
+    private static Method TotalOS$renderFrame;
 
     private ChannelHandlerContext ctx;
     private final Client client;
@@ -61,6 +63,16 @@ public class PacketHandler extends ChannelDuplexHandler {
         ctx.writeAndFlush(c2s_pong);
     }
 
+    private void handlePaletteS2C(ClientboundPalettePacket s2c_palette) {
+        System.out.println("Setting up palette...");
+        Color[] palette = new Color[s2c_palette.palette.length];
+        for(int i = 0; i < palette.length; i++)
+            palette[i] = new Color(s2c_palette.palette[i]);
+        MapColor.setPalette(palette);
+        System.out.println("Caching colors...");
+        MapColor.cachePalette();
+    }
+
     private void handleCreationRequestS2C(ClientboundCreationRequestPacket s2c_request)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         ServerboundCreationStatusPacket c2s_status = new ServerboundCreationStatusPacket();
@@ -74,39 +86,33 @@ public class PacketHandler extends ChannelDuplexHandler {
                     .invoke(null, s2c_request.width, s2c_request.height, s2c_request.name);
             systems.put(c2s_status.id, os);
             name2id.put(s2c_request.name, c2s_status.id);
+            Timer renderTimer = new Timer();
+            renderTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        if (TotalOS$renderFrame == null) {
+                            TotalOS$renderFrame = os.getClass().getMethod("renderFrame");
+                        }
+
+                        BufferedImage screen = (BufferedImage) TotalOS$renderFrame.invoke(os);
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        GZIPOutputStream gzip = new GZIPOutputStream(out);
+                        gzip.write(MapColor.toByteArray(screen));
+                        gzip.close();
+                        byte[] data = out.toByteArray();
+                        ServerboundFramePacket c2s_frame = new ServerboundFramePacket();
+                        c2s_frame.id = c2s_status.id;
+                        c2s_frame.compressedData = data;
+                        ctx.writeAndFlush(c2s_frame);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }, 500, 1000/20);
+            renderTimers.put(c2s_status.id, renderTimer);
         }
         ctx.writeAndFlush(c2s_status);
-
-        Timer renderTimer = new Timer();
-        renderTimer.scheduleAtFixedRate(new TimerTask() {
-
-            private int i = 0;
-            @Override
-            public void run() {
-                i++;
-                BufferedImage img = new BufferedImage(s2c_request.width, s2c_request.height, BufferedImage.TYPE_BYTE_INDEXED);
-                Graphics2D g = img.createGraphics();
-                g.setColor(Color.GREEN);
-                g.fillRect(0, 0, s2c_request.width, s2c_request.height);
-                g.setColor(Color.BLACK);
-                g.drawString("Clientbound rendering!!!!", (int)(200+Math.sin((double)i/3)*100), 50);
-                g.dispose();
-                try {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    GZIPOutputStream gzip = new GZIPOutputStream(out);
-                    gzip.write(((DataBufferByte)img.getRaster().getDataBuffer()).getData());
-                    gzip.close();
-                    byte[] data = out.toByteArray();
-                    ServerboundFramePacket c2s_frame = new ServerboundFramePacket();
-                    c2s_frame.id = c2s_status.id;
-                    c2s_frame.compressedData = data;
-                    ctx.writeAndFlush(c2s_frame);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }, 500, 1000/20);
-        renderTimers.put(c2s_status.id, renderTimer);
     }
 
     private void handleDestroyS2C(ClientboundDestroyPacket s2c_destroy)
@@ -128,6 +134,7 @@ public class PacketHandler extends ChannelDuplexHandler {
         else if(msg instanceof ClientboundPingPacket packet) handlePingS2C(packet);
         else if(msg instanceof ClientboundCreationRequestPacket packet) handleCreationRequestS2C(packet);
         else if(msg instanceof ClientboundDestroyPacket packet) handleDestroyS2C(packet);
+        else if(msg instanceof ClientboundPalettePacket packet) handlePaletteS2C(packet);
         super.channelRead(ctx, msg);
     }
 
