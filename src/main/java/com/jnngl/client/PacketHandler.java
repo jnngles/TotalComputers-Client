@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -96,16 +97,29 @@ public class PacketHandler extends ChannelDuplexHandler {
                         }
 
                         BufferedImage screen = (BufferedImage) TotalOS$renderFrame.invoke(os);
+                        byte[] raw = MapColor.toByteArray(screen);
+                        byte[] sliced = new byte[raw.length];
+                        for(int x = 0; x < screen.getWidth()/128; x++) {
+                            for(int y = 0; y < screen.getHeight()/128; y++) {
+                                int idx = y*(screen.getWidth()/128)+x;
+                                for(int sx = 0; sx < 128; sx++) {
+                                    for(int sy = 0; sy < 128; sy++) {
+                                        sliced[idx*128*128+sy*128+sx] =
+                                                raw[(y+sy)*s2c_request.width+x+sx];
+                                    }
+                                }
+                            }
+                        }
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
                         GZIPOutputStream gzip = new GZIPOutputStream(out);
-                        gzip.write(MapColor.toByteArray(screen));
+                        gzip.write(sliced);
                         gzip.close();
                         byte[] data = out.toByteArray();
                         ServerboundFramePacket c2s_frame = new ServerboundFramePacket();
                         c2s_frame.id = c2s_status.id;
                         c2s_frame.compressedData = data;
                         ctx.writeAndFlush(c2s_frame);
-                    } catch (Exception e) {
+                    } catch (IOException | ReflectiveOperationException e) {
                         throw new RuntimeException(e);
                     }
                 }

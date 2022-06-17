@@ -74,8 +74,8 @@ public class MapColor {
      * Converts image to byte color index array
      */
     public static byte[] toByteArray(BufferedImage data) {
-        byte[] bytes = new byte[128*128];
-        int[] pixels = data.getRGB(0, 0, 128, 128, null, 0, 128);
+        byte[] bytes = new byte[data.getWidth()*data.getHeight()];
+        int[] pixels = data.getRGB(0, 0, data.getWidth(), data.getHeight(), null, 0, data.getWidth());
         for(int i = 0; i < pixels.length; i++)
             bytes[i] = matchColorFast(new Color(pixels[i]));
         return bytes;
