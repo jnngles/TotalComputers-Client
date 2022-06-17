@@ -127,7 +127,7 @@ public class PacketHandler extends ChannelDuplexHandler {
                                 for(int sx = 0; sx < 128; sx++) {
                                     for(int sy = 0; sy < 128; sy++) {
                                         sliced[idx*128*128+sy*128+sx] =
-                                                raw[(y+sy)*s2c_request.width+x+sx];
+                                                raw[(y*128+sy)*s2c_request.width+x*128+sx];
                                     }
                                 }
                             }
