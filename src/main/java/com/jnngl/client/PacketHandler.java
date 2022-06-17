@@ -5,12 +5,18 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import org.jetbrains.annotations.NotNull;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -161,6 +167,20 @@ public class PacketHandler extends ChannelDuplexHandler {
         systems.remove(s2c_destroy.id);
     }
 
+    private void handleEncryptionS2C(ClientboundEncryptionPacket s2c_encryption)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
+                    IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        System.out.println("Encrypting...");
+        Encryption encryption = new Encryption();
+        encryption.decodePublicKeyRSA(s2c_encryption.publicKey);
+        encryption.generateAES();
+        ServerboundEncryptionPacket c2s_encryption = new ServerboundEncryptionPacket();
+        c2s_encryption.secret = encryption.encryptRSA(encryption.aes.getEncoded());
+        ctx.writeAndFlush(c2s_encryption);
+        ctx.pipeline().addBefore("decoder", "decrypt", new PacketDecryptor(encryption));
+        ctx.pipeline().addBefore("encoder", "encrypt", new PacketEncryptor(encryption));
+    }
+
     @Override
     public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
         this.ctx = ctx;
@@ -172,6 +192,7 @@ public class PacketHandler extends ChannelDuplexHandler {
         else if(msg instanceof ClientboundDestroyPacket packet) handleDestroyS2C(packet);
         else if(msg instanceof ClientboundPalettePacket packet) handlePaletteS2C(packet);
         else if(msg instanceof ClientboundTouchPacket packet) handleTouchS2C(packet);
+        else if(msg instanceof ClientboundEncryptionPacket packet) handleEncryptionS2C(packet);
         super.channelRead(ctx, msg);
     }
 
