@@ -5,9 +5,23 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.zip.GZIPOutputStream;
+
 public class PacketHandler extends ChannelDuplexHandler {
 
     private static int freeId = 0;
+    private static final Map<Short, Object> systems = new HashMap<>();
+    private static final Map<String, Short> name2id = new HashMap<>();
+    private static final Map<Short, Timer> renderTimers = new HashMap<>();
 
     private ChannelHandlerContext ctx;
     private final Client client;
@@ -20,7 +34,7 @@ public class PacketHandler extends ChannelDuplexHandler {
     public void channelActive(@NotNull ChannelHandlerContext ctx) throws Exception {
         ServerboundHandshakePacket c2s_handshake = new ServerboundHandshakePacket();
         c2s_handshake.protocolVersion = Client.getProtocolVersion();
-        c2s_handshake.apiVersion = 8;
+        c2s_handshake.apiVersion = (short) client.getCoreApiVersion();
         ctx.writeAndFlush(c2s_handshake);
         super.channelActive(ctx);
     }
@@ -47,17 +61,62 @@ public class PacketHandler extends ChannelDuplexHandler {
         ctx.writeAndFlush(c2s_pong);
     }
 
-    private void handleCreationRequestS2C(ClientboundCreationRequestPacket s2c_request) {
-        // TODO: Implement this
+    private void handleCreationRequestS2C(ClientboundCreationRequestPacket s2c_request)
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         ServerboundCreationStatusPacket c2s_status = new ServerboundCreationStatusPacket();
         c2s_status.status = ServerboundCreationStatusPacket.STATUS_OK;
         if(freeId > Short.MAX_VALUE) c2s_status.status = ServerboundCreationStatusPacket.STATUS_ERR;
         else c2s_status.id = (short)(freeId++);
+        if(name2id.containsKey(s2c_request.name)) c2s_status.status = ServerboundCreationStatusPacket.STATUS_ERR;
+        if(c2s_status.status == ServerboundCreationStatusPacket.STATUS_OK) {
+            Object os = client.getCore().findClass("com.jnngl.totalcomputers.system.TotalOS")
+                    .getMethod("createClientbound", int.class, int.class, String.class)
+                    .invoke(null, s2c_request.width, s2c_request.height, s2c_request.name);
+            systems.put(c2s_status.id, os);
+            name2id.put(s2c_request.name, c2s_status.id);
+        }
         ctx.writeAndFlush(c2s_status);
+
+        Timer renderTimer = new Timer();
+        renderTimer.scheduleAtFixedRate(new TimerTask() {
+
+            private int i = 0;
+            @Override
+            public void run() {
+                i++;
+                BufferedImage img = new BufferedImage(s2c_request.width, s2c_request.height, BufferedImage.TYPE_BYTE_INDEXED);
+                Graphics2D g = img.createGraphics();
+                g.setColor(Color.GREEN);
+                g.fillRect(0, 0, s2c_request.width, s2c_request.height);
+                g.setColor(Color.BLACK);
+                g.drawString("Clientbound rendering!!!!", (int)(200+Math.sin((double)i/3)*100), 50);
+                g.dispose();
+                try {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    GZIPOutputStream gzip = new GZIPOutputStream(out);
+                    gzip.write(((DataBufferByte)img.getRaster().getDataBuffer()).getData());
+                    gzip.close();
+                    byte[] data = out.toByteArray();
+                    ServerboundFramePacket c2s_frame = new ServerboundFramePacket();
+                    c2s_frame.id = c2s_status.id;
+                    c2s_frame.compressedData = data;
+                    ctx.writeAndFlush(c2s_frame);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, 500, 1000/20);
+        renderTimers.put(c2s_status.id, renderTimer);
     }
 
-    private void handleDestroyS2C(ClientboundDestroyPacket s2c_destroy) {
-        // TODO: Implement this
+    private void handleDestroyS2C(ClientboundDestroyPacket s2c_destroy)
+            throws IllegalAccessException, NoSuchFieldException {
+        if(!systems.containsKey(s2c_destroy.id)) return;
+        Object os = systems.get(s2c_destroy.id);
+        renderTimers.get(s2c_destroy.id).cancel();
+        renderTimers.remove(s2c_destroy.id);
+        name2id.remove((String)os.getClass().getField("name").get(os));
+        systems.remove(s2c_destroy.id);
     }
 
     @Override

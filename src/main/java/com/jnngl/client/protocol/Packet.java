@@ -25,6 +25,10 @@ public abstract class Packet {
         registeredPackets.put(packet.getPacketID(), packet.getClass().getConstructor());
     }
 
+    public static int totalRegisteredPackets() {
+        return registeredPackets.size();
+    }
+
     public static Packet read(ByteBuf buf) throws Exception {
         if(buf.readableBytes() < 7) throw new TooSmallPacketException(buf.readableBytes(), 7);
         if(buf.readByte() != 0x0A) throw new InvalidPacketException("Invalid magic value");
