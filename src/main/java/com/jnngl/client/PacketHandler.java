@@ -25,6 +25,10 @@ public class PacketHandler extends ChannelDuplexHandler {
     private static final Map<Short, Timer> renderTimers = new HashMap<>();
 
     private static Method TotalOS$renderFrame;
+    private static Method TotalOS$processTouch;
+
+    private static Object InteractType$LEFT_CLICK;
+    private static Object InteractType$RIGHT_CLICK;
 
     private ChannelHandlerContext ctx;
     private final Client client;
@@ -72,6 +76,24 @@ public class PacketHandler extends ChannelDuplexHandler {
         MapColor.setPalette(palette);
         System.out.println("Caching colors...");
         MapColor.cachePalette();
+    }
+
+    private void handleTouchS2C(ClientboundTouchPacket s2c_touch)
+            throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException, NoSuchMethodException,
+            InvocationTargetException {
+        if(!systems.containsKey(s2c_touch.id)) return;
+        Object os = systems.get(s2c_touch.id);
+        if (TotalOS$processTouch == null) {
+            Class<?> InteractType = client.getCore()
+                    .findClass("com.jnngl.totalcomputers.TotalComputers$InputInfo$InteractType");
+            InteractType$LEFT_CLICK = InteractType.getField("LEFT_CLICK").get(null);
+            InteractType$RIGHT_CLICK = InteractType.getField("RIGHT_CLICK").get(null);
+            TotalOS$processTouch = os.getClass()
+                    .getMethod("processTouch", int.class, int.class, InteractType, boolean.class);
+        }
+        TotalOS$processTouch.invoke(os, s2c_touch.x, s2c_touch.y,
+                s2c_touch.type == ClientboundTouchPacket.LEFT_CLICK?
+                        InteractType$LEFT_CLICK : InteractType$RIGHT_CLICK, s2c_touch.admin);
     }
 
     private void handleCreationRequestS2C(ClientboundCreationRequestPacket s2c_request)
@@ -149,6 +171,7 @@ public class PacketHandler extends ChannelDuplexHandler {
         else if(msg instanceof ClientboundCreationRequestPacket packet) handleCreationRequestS2C(packet);
         else if(msg instanceof ClientboundDestroyPacket packet) handleDestroyS2C(packet);
         else if(msg instanceof ClientboundPalettePacket packet) handlePaletteS2C(packet);
+        else if(msg instanceof ClientboundTouchPacket packet) handleTouchS2C(packet);
         super.channelRead(ctx, msg);
     }
 
