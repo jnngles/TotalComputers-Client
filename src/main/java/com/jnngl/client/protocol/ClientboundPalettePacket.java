@@ -1,5 +1,6 @@
 package com.jnngl.client.protocol;
 
+import com.jnngl.client.exception.TooSmallPacketException;
 import io.netty.buffer.ByteBuf;
 
 public class ClientboundPalettePacket extends Packet {
@@ -17,6 +18,7 @@ public class ClientboundPalettePacket extends Packet {
 
     @Override
     public void readData(ByteBuf buf, int length) throws Exception {
+        if(length < 4) throw new TooSmallPacketException(length, 4);
         palette = new int[buf.readInt()];
         for(int i = 0; i < palette.length; i++)
             palette[i] = buf.readInt();
@@ -24,7 +26,7 @@ public class ClientboundPalettePacket extends Packet {
 
     @Override
     public int getLength() {
-        return 4*palette.length;
+        return 4+4*palette.length;
     }
 
     public int[] palette;
