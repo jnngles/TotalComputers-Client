@@ -21,6 +21,8 @@ import java.util.Scanner;
 
 public class Client {
 
+    public static boolean DEBUG = false;
+
     private final Client client = this;
     private String token;
     private Core core;
@@ -77,6 +79,11 @@ public class Client {
 
     public static void main(String[] args) throws PacketAlreadyExistsException, NoSuchMethodException, IOException,
             ClassNotFoundException, InvocationTargetException, IllegalAccessException, IncompatibleAPIException {
+        if(args.length > 0 && args[0].equalsIgnoreCase("--debug"))
+            Client.DEBUG = true;
+        if(Client.DEBUG)
+            System.out.println("Debug mode enabled.");
+
         final Scanner scanner = new Scanner(System.in);
         System.out.print("Enter IP address (Without port): ");
         final String ip = scanner.next();

@@ -13,9 +13,11 @@ public class PacketDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         out.add(Packet.read(in));
 
-        for(Object msg : out) {
-            System.out.println("S -> C: " + msg.getClass().getSimpleName() +
-                    " (0x" + String.format("%x", ((Packet)msg).getPacketID()) + ")");
+        if(Client.DEBUG) {
+            for (Object msg : out) {
+                System.out.println("S -> C: " + msg.getClass().getSimpleName() +
+                        " (0x" + String.format("%x", ((Packet) msg).getPacketID()) + ")");
+            }
         }
     }
 }

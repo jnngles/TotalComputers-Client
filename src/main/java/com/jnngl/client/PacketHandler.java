@@ -83,8 +83,9 @@ public class PacketHandler extends ChannelDuplexHandler {
         for(int i = 0; i < palette.length; i++)
             palette[i] = new Color(s2c_palette.palette[i]);
         MapColor.setPalette(palette);
-        System.out.println("Caching colors...");
+        System.out.print("Caching colors... ");
         MapColor.cachePalette();
+        System.out.println("Done.");
     }
 
     private void handleTouchS2C(ClientboundTouchPacket s2c_touch)
