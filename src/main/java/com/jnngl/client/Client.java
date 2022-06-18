@@ -79,6 +79,7 @@ public class Client {
 
     public static void main(String[] args) throws PacketAlreadyExistsException, NoSuchMethodException, IOException,
             ClassNotFoundException, InvocationTargetException, IllegalAccessException, IncompatibleAPIException {
+        Logger.initializeLogger();
         if(args.length > 0 && args[0].equalsIgnoreCase("--debug"))
             Client.DEBUG = true;
         if(Client.DEBUG)
