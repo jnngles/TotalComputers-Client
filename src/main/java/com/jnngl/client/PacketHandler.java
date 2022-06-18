@@ -152,7 +152,7 @@ public class PacketHandler extends ChannelDuplexHandler {
                         c2s_frame.compressedData = data;
                         ctx.writeAndFlush(c2s_frame);
                     } catch (IOException | ReflectiveOperationException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
                     }
                 }
             }, 500, 1000/20);
