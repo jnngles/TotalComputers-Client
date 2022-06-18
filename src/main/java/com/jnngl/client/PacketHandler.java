@@ -1,5 +1,8 @@
 package com.jnngl.client;
 
+import com.jcraft.jzlib.Deflater;
+import com.jcraft.jzlib.DeflaterOutputStream;
+import com.jcraft.jzlib.JZlib;
 import com.jnngl.client.protocol.*;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -139,9 +142,10 @@ public class PacketHandler extends ChannelDuplexHandler {
                             }
                         }
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        GZIPOutputStream gzip = new GZIPOutputStream(out);
-                        gzip.write(sliced);
-                        gzip.close();
+                        DeflaterOutputStream defl =
+                                new DeflaterOutputStream(out, new Deflater(JZlib.Z_BEST_COMPRESSION));
+                        defl.write(sliced);
+                        defl.close();
                         byte[] data = out.toByteArray();
                         ServerboundFramePacket c2s_frame = new ServerboundFramePacket();
                         c2s_frame.id = c2s_status.id;
