@@ -5,9 +5,7 @@ import com.jnngl.client.exception.PacketAlreadyExistsException;
 import com.jnngl.client.protocol.Packet;
 import com.jnngl.client.protocol.Protocol;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -22,6 +20,7 @@ import java.util.Scanner;
 public class Client {
 
     public static boolean DEBUG = false;
+    public static boolean LOGGER = true;
 
     private final Client client = this;
     private String token;
@@ -58,6 +57,8 @@ public class Client {
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(@NotNull SocketChannel ch) {
+                ch.config().setOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator());
+                ch.config().setOption(ChannelOption.TCP_NODELAY, true);
                 ch.pipeline().addLast("decoder", new PacketDecoder());
                 ch.pipeline().addLast("encoder", new PacketEncoder());
                 ch.pipeline().addLast("packet_handler", new PacketHandler(client));
@@ -79,9 +80,14 @@ public class Client {
 
     public static void main(String[] args) throws PacketAlreadyExistsException, NoSuchMethodException, IOException,
             ClassNotFoundException, InvocationTargetException, IllegalAccessException, IncompatibleAPIException {
-        Logger.initializeLogger();
-        if(args.length > 0 && args[0].equalsIgnoreCase("--debug"))
-            Client.DEBUG = true;
+        for(String arg : args) {
+            if (arg.equalsIgnoreCase("--debug"))
+                Client.DEBUG = true;
+            else if(arg.equalsIgnoreCase("--no-logger"))
+                Client.LOGGER = false;
+        }
+        if(Client.LOGGER)
+            Logger.initializeLogger();
         if(Client.DEBUG)
             System.out.println("Debug mode enabled.");
 
