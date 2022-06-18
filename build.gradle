@@ -6,6 +6,15 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    manifest {
+        attributes["Manifest-Version"] = "1.0"
+        attributes["Main-Class"] = "com.jnngl.client.Client"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory()? it : zipTree(it) } }
+}
+
 dependencies {
     implementation "io.netty:netty-all:4.1.77.Final"
     implementation 'org.jetbrains:annotations:23.0.0'
