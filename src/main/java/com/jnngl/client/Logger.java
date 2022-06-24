@@ -3,6 +3,7 @@ package com.jnngl.client;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -120,7 +121,8 @@ public class Logger {
                 newline = true;
             }
             super.write(b);
-            old.print((char)b);
+            old.write(b);
+            old.flush();
         }
 
         @Override
@@ -130,9 +132,25 @@ public class Logger {
 
         @Override
         public void write(byte @NotNull [] b, int off, int len) throws IOException {
+            int prevX = off;
             for(int i = off; i < off+len; i++) {
-                write(b[i]);
+                if(newline) {
+                    newline = false;
+
+                    SimpleDateFormat format = new SimpleDateFormat(pattern);
+                    write(("["+format.format(new Date())+" "+Thread.currentThread().getName()+"/"+channel+"] ").getBytes(StandardCharsets.UTF_8));
+                }
+                if(b[i] == 10) {
+                    old.write(b, prevX, i-prevX+1);
+                    old.flush();
+                    prevX = i+1;
+                    flush();
+                    newline = true;
+                }
             }
+            super.write(b, off, len);
+            old.write(b, prevX, len-prevX+off);
+            old.flush();
         }
 
         @Override
@@ -146,7 +164,7 @@ public class Logger {
     private static class LoggerPrintStream extends PrintStream {
 
         public LoggerPrintStream(LoggerOutputStream out) {
-            super(out);
+            super(out, true, Charset.forName("cp1251"));
         }
 
         public LoggerOutputStream getOut() {

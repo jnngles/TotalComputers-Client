@@ -11,7 +11,7 @@ public class Core {
     private ClassLoader child = this.getClass().getClassLoader();
 
     public void loadCore(File file) throws IOException {
-        if(!file.exists()) throw new FileNotFoundException("Unable to load core file");
+        if(!file.exists()) throw new FileNotFoundException(Localization.get(17));
         child = new URLClassLoader(new URL[] { file.toURI().toURL() }, Core.class.getClassLoader());
     }
 

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.zip.GZIPOutputStream;
 
 public class PacketHandler extends ChannelDuplexHandler {
 
@@ -56,19 +55,19 @@ public class PacketHandler extends ChannelDuplexHandler {
     }
 
     private void handleHandshakeS2C(ClientboundHandshakePacket handshake_s2c) {
-        System.out.println("Connecting to "+handshake_s2c.serverName+" server");
+        System.out.println(Localization.get(9)+handshake_s2c.serverName+Localization.get(10));
         ServerboundConnectPacket c2s_connect = new ServerboundConnectPacket();
         c2s_connect.token = client.getToken();
         ctx.writeAndFlush(c2s_connect);
     }
 
     private void handleDisconnectS2C(ClientboundDisconnectPacket disconnect_s2c) {
-        System.out.println("Disconnected: "+disconnect_s2c.reason);
+        System.out.println(Localization.get(11)+disconnect_s2c.reason);
         ctx.disconnect();
     }
 
     private void handleConnectionSuccessS2C(ClientboundConnectionSuccessPacket connectSuccess_s2c) {
-        System.out.println("Connected to player "+connectSuccess_s2c.name);
+        System.out.println(Localization.get(12)+connectSuccess_s2c.name);
     }
 
     private void handlePingS2C(ClientboundPingPacket s2c_ping) {
@@ -78,14 +77,14 @@ public class PacketHandler extends ChannelDuplexHandler {
     }
 
     private void handlePaletteS2C(ClientboundPalettePacket s2c_palette) {
-        System.out.println("Setting up palette...");
+        System.out.println(Localization.get(13));
         Color[] palette = new Color[s2c_palette.palette.length];
         for(int i = 0; i < palette.length; i++)
             palette[i] = new Color(s2c_palette.palette[i]);
         MapColor.setPalette(palette);
-        System.out.print("Caching colors... ");
+        System.out.print(Localization.get(14));
         MapColor.cachePalette();
-        System.out.println("Done.");
+        System.out.println(Localization.get(15));
     }
 
     private void handleTouchS2C(ClientboundTouchPacket s2c_touch)
@@ -175,7 +174,7 @@ public class PacketHandler extends ChannelDuplexHandler {
     private void handleEncryptionS2C(ClientboundEncryptionPacket s2c_encryption)
             throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
                     IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        System.out.println("Encrypting...");
+        System.out.println(Localization.get(16));
         Encryption encryption = new Encryption();
         encryption.decodePublicKeyRSA(s2c_encryption.publicKey);
         encryption.generateAES();

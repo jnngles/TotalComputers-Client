@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class Client {
@@ -85,18 +86,29 @@ public class Client {
                 Client.DEBUG = true;
             else if(arg.equalsIgnoreCase("--no-logger"))
                 Client.LOGGER = false;
+            else if(arg.equalsIgnoreCase("--ru-lang"))
+                Localization.init(new Localization.HeccrbqZpsr());
+            else if(arg.equalsIgnoreCase("--en-lang"))
+                Localization.init(new Localization.EnglishLang());
         }
         if(Client.LOGGER)
             Logger.initializeLogger();
+
+        if(Localization.get() == null) {
+            if(Locale.getDefault().getLanguage().equals(new Locale("ru").getLanguage()))
+                 Localization.init(new Localization.HeccrbqZpsr());
+            else Localization.init(new Localization.EnglishLang());
+        }
+
         if(Client.DEBUG)
-            System.out.println("Debug mode enabled.");
+            System.out.println(Localization.get(0));
 
         final Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter IP address (Without port): ");
+        System.out.print(Localization.get(1));
         final String ip = scanner.next();
-        System.out.print("Enter port: ");
+        System.out.print(Localization.get(2));
         final int port = scanner.nextInt();
-        System.out.print("Enter token: ");
+        System.out.print(Localization.get(3));
         final String token = scanner.next();
 
         System.out.println("\n-------------------");
@@ -104,18 +116,18 @@ public class Client {
         Client client = new Client();
         client.setToken(token);
 
-        System.out.println("Loading core...");
+        System.out.println(Localization.get(4));
         client.loadCore(new File("core.jar"));
 
         client.api = (int) client.core.findClass("com.jnngl.totalcomputers.system.TotalOS")
                 .getMethod("getApiVersion").invoke(null);
         if(client.getCoreApiVersion() < 8)
             throw new IncompatibleAPIException(client.getCoreApiVersion(), 8);
-        System.out.println("Core API version: "+client.getCoreApiVersion());
+        System.out.println(Localization.get(5)+client.getCoreApiVersion());
 
-        System.out.println("Registering packets...");
+        System.out.println(Localization.get(6));
         Protocol.registerPackets();
-        System.out.println("Registered "+ Packet.totalRegisteredPackets()+" packets");
+        System.out.println(Localization.get(7)+Packet.totalRegisteredPackets()+Localization.get(8));
 
         System.out.println("-------------------\n");
         client.start(ip, port);

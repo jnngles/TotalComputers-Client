@@ -7,9 +7,10 @@ public class ExceptionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.err.println("Unexpected error: "+cause.getClass().getName()+": "+cause.getMessage());
-        System.err.println("Try to reset token (/tcmp token reset)");
-        System.err.println("Disconnecting...");
+        System.err.println(Localization.get(18)+cause.getClass().getName()+": "+cause.getMessage());
+        System.err.println(Localization.get(19));
+        System.err.println(Localization.get(20));
+        System.err.println(Localization.get(21));
         ctx.disconnect();
     }
 }
