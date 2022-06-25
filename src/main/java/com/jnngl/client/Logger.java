@@ -141,6 +141,7 @@ public class Logger {
                     write(("["+format.format(new Date())+" "+Thread.currentThread().getName()+"/"+channel+"] ").getBytes(StandardCharsets.UTF_8));
                 }
                 if(b[i] == 10) {
+                    super.write(b, prevX, i-prevX+1);
                     old.write(b, prevX, i-prevX+1);
                     old.flush();
                     prevX = i+1;
@@ -148,7 +149,7 @@ public class Logger {
                     newline = true;
                 }
             }
-            super.write(b, off, len);
+            super.write(b, prevX, len-prevX+off);
             old.write(b, prevX, len-prevX+off);
             old.flush();
         }
