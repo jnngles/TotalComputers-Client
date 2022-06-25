@@ -15,10 +15,13 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.util.Locale;
 import java.util.Scanner;
 
 public class Client {
+
+    public static final String VERSION = "0.10b-p1";
 
     public static boolean DEBUG = false;
     public static boolean LOGGER = true;
@@ -47,6 +50,19 @@ public class Client {
 
     public int getCoreApiVersion() {
         return api;
+    }
+
+    private static void checkUpdates() {
+        try {
+            Scanner scanner = new Scanner(new URL("https://raw.githubusercontent.com/JNNGL/TotalComputers-Client/main/VERSION").openStream());
+            String latestVersion = scanner.nextLine();
+            if(!latestVersion.equals(VERSION)) {
+                System.out.println(Localization.get(22)+latestVersion);
+                System.out.println(Localization.get(24)+"https://github.com/JNNGL/TotalComputers-Client/releases\n");
+            }
+        } catch (IOException e) {
+            System.err.println(Localization.get(23));
+        }
     }
 
     private void start(String ip, int port) {
@@ -99,6 +115,8 @@ public class Client {
                  Localization.init(new Localization.HeccrbqZpsr());
             else Localization.init(new Localization.EnglishLang());
         }
+
+        checkUpdates();
 
         if(Client.DEBUG)
             System.out.println(Localization.get(0));

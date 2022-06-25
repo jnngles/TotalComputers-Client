@@ -46,7 +46,10 @@ public class Localization {
                     "Критическая ошибка: ", // 18
                     "Сообщите об этом разработчику (https://discord.gg/6fezjgfK7F)", // 19
                     "Попробуйте сбросить токен (/tcmp token reset)", // 20
-                    "Отключение..." // 21
+                    "Отключение...", // 21
+                    "Доступно обновление: ", // 22
+                    "Не удалось проверить наличие обновлений", // 23
+                    "Ссылка на скачивание: ", // 24
             });
         }
     }
@@ -75,6 +78,9 @@ public class Localization {
                     "Report this to the developer (https://discord.gg/6fezjgfK7F)", // 19
                     "Try to reset token (/tcmp token reset)", // 20
                     "Disconnecting...", // 21
+                    "An update is available: ", // 22
+                    "Unable to check for updates", // 23
+                    "Download link: ", // 24
             });
         }
     }
