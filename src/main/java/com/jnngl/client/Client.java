@@ -21,7 +21,7 @@ import java.util.Scanner;
 
 public class Client {
 
-    public static final String VERSION = "0.10b-p1";
+    public static final String VERSION = "0.11b-p2";
 
     public static boolean DEBUG = false;
     public static boolean LOGGER = true;
