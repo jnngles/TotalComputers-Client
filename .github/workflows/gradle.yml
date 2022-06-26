@@ -37,8 +37,8 @@ jobs:
       - name: Download core
         run: "curl -o build/libs/core.jar -L `curl -s https://api.github.com/repos/JNNGL/TotalComputers/releases/latest | grep -oP '\"tarball_url\": \"\\K(.*)(?=\")'`"
       - name: Create run.bat
-        run: echo "@echo off
-chcp 65001
+        run: echo "@echo off \
+chcp 65001 \
 java -jar TotalComputers-Client.jar" > build/libs/run.bat
       - name: Upload artifact
         uses: actions/upload-artifact@v3.0.0
