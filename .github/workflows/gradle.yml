@@ -45,10 +45,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3.0.0
         with:
-          name: TotalComputers
-          path: "build/libs/*"
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3.0.0
-        with:
           name: TotalComputers-Client
           path: "build/libs/*"
