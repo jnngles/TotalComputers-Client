@@ -92,7 +92,7 @@ public class Client {
     }
 
     public static short getProtocolVersion() {
-        return 1;
+        return 2;
     }
 
     public static void main(String[] args) throws PacketAlreadyExistsException, NoSuchMethodException, IOException,

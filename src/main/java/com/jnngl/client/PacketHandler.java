@@ -40,6 +40,7 @@ public class PacketHandler extends ChannelDuplexHandler {
 
     private ChannelHandlerContext ctx;
     private final Client client;
+    private boolean encryption = false;
 
     public PacketHandler(Client client) {
         this.client = client;
@@ -55,6 +56,14 @@ public class PacketHandler extends ChannelDuplexHandler {
     }
 
     private void handleHandshakeS2C(ClientboundHandshakePacket handshake_s2c) {
+        if(encryption) {
+            ctx.pipeline().addBefore("decrypt", "defrag", new PacketDefragmentation());
+            ctx.pipeline().addBefore("encrypt", "prefixer", new PacketLengthPrefixer());
+        } else {
+            ctx.pipeline().addBefore("decoder", "defrag", new PacketDefragmentation());
+            ctx.pipeline().addBefore("encoder", "prefixer", new PacketLengthPrefixer());
+        }
+
         System.out.println(Localization.get(9)+handshake_s2c.serverName+Localization.get(10));
         ServerboundConnectPacket c2s_connect = new ServerboundConnectPacket();
         c2s_connect.token = client.getToken();
@@ -183,6 +192,7 @@ public class PacketHandler extends ChannelDuplexHandler {
         ctx.writeAndFlush(c2s_encryption);
         ctx.pipeline().addBefore("decoder", "decrypt", new PacketDecryptor(encryption));
         ctx.pipeline().addBefore("encoder", "encrypt", new PacketEncryptor(encryption));
+        this.encryption = true;
     }
 
     @Override
