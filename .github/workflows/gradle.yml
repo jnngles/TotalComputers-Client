@@ -35,7 +35,7 @@ jobs:
         with:
           arguments: build
       - name: Download core
-        run: "curl -o build/libs/core.jar -L `curl -s https://api.github.com/repos/JNNGL/TotalComputers/releases/latest | grep -oP '\"tarball_url\": \"\\K(.*)(?=\")'`"
+        run: "curl -s https://api.github.com/repos/JNNGL/TotalComputers/releases/latest | grep \"browser_download_url\" | tail -1 | sed 's/^.*: //' | xargs wget -O core.jar"
       - name: Create run.bat (1)
         run: echo "@echo off" > build/libs/run.bat
       - name: Create run.bat (2)
