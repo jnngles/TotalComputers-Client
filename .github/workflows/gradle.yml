@@ -35,7 +35,7 @@ jobs:
         with:
           arguments: build
       - name: Upload artifact
-      uses: actions/upload-artifact@v3.0.0
-      with:
-        name: TotalComputers-Client
-        path: "build/libs/*.jar"
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: TotalComputers-Client
+          path: "build/libs/*.jar"
