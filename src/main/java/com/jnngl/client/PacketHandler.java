@@ -27,7 +27,6 @@ import java.util.TimerTask;
 
 public class PacketHandler extends ChannelDuplexHandler {
 
-    private static int freeId = 0;
     private static final Map<Short, Object> systems = new HashMap<>();
     private static final Map<String, Short> name2id = new HashMap<>();
     private static final Map<Short, Timer> renderTimers = new HashMap<>();
@@ -118,8 +117,7 @@ public class PacketHandler extends ChannelDuplexHandler {
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         ServerboundCreationStatusPacket c2s_status = new ServerboundCreationStatusPacket();
         c2s_status.status = ServerboundCreationStatusPacket.STATUS_OK;
-        if(freeId > Short.MAX_VALUE) c2s_status.status = ServerboundCreationStatusPacket.STATUS_ERR;
-        else c2s_status.id = (short)(freeId++);
+        c2s_status.id = s2c_request.id;
         if(name2id.containsKey(s2c_request.name)) c2s_status.status = ServerboundCreationStatusPacket.STATUS_ERR;
         if(c2s_status.status == ServerboundCreationStatusPacket.STATUS_OK) {
             Object os = client.getCore().findClass("com.jnngl.totalcomputers.system.TotalOS")
