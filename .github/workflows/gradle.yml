@@ -34,8 +34,19 @@ jobs:
         uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
         with:
           arguments: build
+      - name: Download core
+        run: "curl -o build/libs/core.jar -L `curl -s https://api.github.com/repos/JNNGL/TotalComputers/releases/latest | grep -oP '\"tarball_url\": \"\K(.*)(?=\")'`"
+      - name: Create run.bat
+        run: echo "@echo off
+chcp 65001
+java -jar TotalComputers-Client.jar" > build/libs/run.bat
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: TotalComputers
+          path: "build/libs/*"
       - name: Upload artifact
         uses: actions/upload-artifact@v3.0.0
         with:
           name: TotalComputers-Client
-          path: "build/libs/*.jar"
+          path: "build/libs/*"
